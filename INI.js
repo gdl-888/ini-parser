@@ -1,5 +1,5 @@
 module.exports = {
-	parse: function parseINI(iniString) {
+	parse: function parseINI(iniString, options = { forceString: false, enableGlobal: false }) {
 		if(iniString.includes('\r') && !iniString.includes('\n')) {  // 매킨토시
 			iniString = iniString.replace(/\r/g, '\n');
 		}
@@ -24,14 +24,29 @@ module.exports = {
 			}
 			else if(data) {
 				if(!currentSection) {
-					continue;
+					if(options['enableGlobal']) currentSection = '_global';
+					else continue;
 				}
 				
 				if(!retval[currentSection]) retval[currentSection] = {};
-				retval[currentSection][data[1]] = data[2];
+				if(options['forceString'])
+					retval[currentSection][data[1]] = data[2];
+				else {
+					if(!isNaN(Number(data[2]))) {
+						retval[currentSection][data[1]] = Number(data[2]);
+					}
+					else if(data[2] == 'true') {
+						retval[currentSection][data[1]] = true;
+					}
+					else if(data[2] == 'false') {
+						retval[currentSection][data[1]] = false;
+					}
+					else
+						retval[currentSection][data[1]] = data[2];
+				}
 			}
 		}
 		
 		return retval;
 	}
-}
+};
